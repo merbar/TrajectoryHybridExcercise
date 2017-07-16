@@ -22,17 +22,36 @@ def idx(float_num):
 	"""
 	return int(floor(float_num))
 
+def cost_grid_distance(grid, start, goal):
+	"""
+	Creates heuristic: simple distance to goal in grid cells
+	"""
+	cost = [[(goal[0]-row)+(goal[1]-col) for row in range(len(grid[0]))] for col in range(len(grid))]
+	for row in range(len(grid[0])):
+		for col in range(len(grid)):
+			if grid[row][col] == 1:
+				cost[row][col] = 999
+	for row in cost:
+		print(row)
+	return cost
+
+
 def search(grid, start, goal):
 	"""
 	Working Implementation of breadth first search. Does NOT use a heuristic
 	and as a result this is pretty inefficient. Try modifying this algorithm 
 	into hybrid A* by adding heuristics appropriately.
 	"""
+
+	# TODO: TRY JUST ADDING HEURISTIC TO EXISTING g AND SEE IF THAT WORKS
+	# TODO: EXPAND EACH STATE BY 'f' = g + heuristic. Needs to be at index 0 for sorting to work
+
 	closed = [[[0 for row in range(len(grid[0]))] for col in range(len(grid))] for stack in range(NUM_THETA_CELLS)]
 	came_from = [[[0 for row in range(len(grid[0]))] for col in range(len(grid))] for stack in range(NUM_THETA_CELLS)]
+	cost = cost_grid_distance(grid, start, goal)
 	x,y,theta = start
 	stack = theta_to_stack_number(theta)
-	g = 0
+	g = cost[idx(x)][idx(y)]
 	closed[stack][idx(x)][idx(y)] = (g,x,y,theta)
 	came_from[stack][idx(x)][idx(y)] = (g,x,y,theta)
 	total_closed = 1
@@ -47,16 +66,17 @@ def search(grid, start, goal):
 			print "\n###############\nfound path to goal in {} expansions\n".format(total_closed)
 			return closed, came_from, (g,x,y,theta)
 		for next_state in expand(next):
+			# each next_state's x,y coordinate is floating point
 			g2, x2, y2, theta2 = next_state
 			if x2 < 0 or x2 >= len(grid) or y2 < 0 or y2 >= len(grid[0]):
 				# invalid cell
 				continue
+			g2 = cost[idx(x2)][idx(y)]
 			stack2 = theta_to_stack_number(theta2)
 			# try:
 			# print "as indices...: {}, {}, {}".format(idx(x2), idx(y2), stack2)  
 			# print "closed dims {} x {} x {}".format(len(closed), len(closed[0]), len(closed[0][0]))
-			if closed[stack2][idx(x2)][idx(y2)] == 0 and grid[idx(x2)][idx(y2)] == 0:
-				
+			if closed[stack2][idx(x2)][idx(y2)] == 0 and grid[idx(x2)][idx(y2)] == 0:				
 				opened.append((g2, x2, y2, theta2))
 				closed[stack2][idx(x2)][idx(y2)] = next_state
 				came_from[stack2][idx(x2)][idx(y2)] = next
@@ -88,9 +108,9 @@ def expand(state):
 	g, x, y, theta = state
 	g2 = g+1
 	next_states = []
-	for delta in range(-35, 40, 5):
-		delta = pi / 180.0 * delta
-		omega = SPEED / LENGTH * tan(delta)
+	for delta in range(-35, 40, 5): # "steering input". Range up to and including +35
+		delta = pi / 180.0 * delta  # to radians
+		omega = SPEED / LENGTH * tan(delta) # change in heading
 		theta2 = theta + omega
 		x2 = x + SPEED * cos(theta2)
 		y2 = y + SPEED * sin(theta2)

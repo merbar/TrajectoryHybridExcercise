@@ -26,7 +26,7 @@ MAZE = [
 
 EMPTY = [[_ for i in range(15)] for j in range(15)]
 
-GRID = EMPTY # change to MAZE for testing
+GRID = MAZE # change to MAZE for testing
 
 START = (0.0,0.0,0.0)
 GOAL = (len(GRID)-1, len(GRID[0])-1)
