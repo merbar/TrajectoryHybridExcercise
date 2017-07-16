@@ -24,16 +24,43 @@ def idx(float_num):
 
 def cost_grid_distance(grid, start, goal):
 	"""
-	Creates heuristic: simple distance to goal in grid cells
+	Creates heuristic: simple distance to goal in grid cells (ignores obstacles)
 	"""
 	cost = [[(goal[0]-row)+(goal[1]-col) for row in range(len(grid[0]))] for col in range(len(grid))]
 	for row in range(len(grid[0])):
 		for col in range(len(grid)):
 			if grid[row][col] == 1:
 				cost[row][col] = 999
-	for row in cost:
-		print(row)
 	return cost
+
+def cost_dynamic_programming(grid, start, goal):
+	"""
+	Creates heuristic: cost to goal from every point in the grid (obeys obstacles)
+	"""
+	cost = [[0 for row in range(len(grid[0]))] for col in range(len(grid))]
+	for row in range(len(grid[0])):
+		for col in range(len(grid)):
+			if grid[row][col] == 1:
+				cost[row][col] = 999
+
+	visited = [[0 for row in range(len(grid[0]))] for col in range(len(grid))]
+	deltas = [(-1,0), (1,0), (0,-1), (0,1)]
+	x, y = goal
+	g = 0
+	opened = [(g,x,y)]
+	cost[x][y] = '*'
+	while len(opened):
+		opened.sort(reverse=True)
+		g, x, y = opened.pop()
+		for delta in deltas:
+			x2 = x+delta[0]
+			y2 = y+delta[1]
+			if not (x2 < 0 or x2 >= len(grid) or y2 < 0 or y2 >= len(grid[0]) or cost[x2][y2] != 0):
+				g2 = g + 1
+				opened.append((g2, x2, y2))
+				cost[x2][y2] = g2
+	return cost
+
 
 
 def search(grid, start, goal):
@@ -48,7 +75,11 @@ def search(grid, start, goal):
 
 	closed = [[[0 for row in range(len(grid[0]))] for col in range(len(grid))] for stack in range(NUM_THETA_CELLS)]
 	came_from = [[[0 for row in range(len(grid[0]))] for col in range(len(grid))] for stack in range(NUM_THETA_CELLS)]
-	cost = cost_grid_distance(grid, start, goal)
+	cost_grid_dist = cost_grid_distance(grid, start, goal)
+	cost_dp = cost_dynamic_programming(grid, start, goal)
+	cost = cost_dp
+	for row in cost:
+		print(row)
 	x,y,theta = start
 	stack = theta_to_stack_number(theta)
 	g = cost[idx(x)][idx(y)]
